@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANDIPALMAS - POS System</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFD700;
+    --yellow-light: #FFF3B0;
+    --red: #E8211A;
+    --red-dark: #B51510;
+    --black: #1A1A1A;
+    --white: #FFFEF5;
+    --cream: #FFF8E7;
+    --gray: #F0EDE0;
+    --green: #2ECC71;
+    --green-dark: #27AE60;
+    --shadow: 4px 4px 0px #1A1A1A;
+    --shadow-sm: 2px 2px 0px #1A1A1A;
+    --shadow-lg: 6px 6px 0px #1A1A1A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--yellow);
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(0,0,0,0.03) 20px,
+      rgba(0,0,0,0.03) 40px
+    );
+    min-height: 100vh;
+    color: var(--black);
+  }
+
+  /* HEADER */
+  header {
+    background: var(--black);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid var(--yellow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    color: var(--yellow);
+    letter-spacing: 3px;
+    text-shadow: 3px 3px 0 var(--red);
+  }
+
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .order-badge {
+    background: var(--red);
+    color: var(--white);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    border: 2px solid var(--yellow);
+    border-radius: 4px;
+  }
+
+  .clock {
+    color: var(--yellow-light);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  /* LAYOUT */
+  .pos-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    height: calc(100vh - 64px);
+  }
+
+  /* LEFT - MENU PANEL */
+  .menu-panel {
+    background: var(--cream);
+    overflow-y: auto;
+    padding: 20px;
+    border-right: 4px solid var(--black);
+  }
+
+  .menu-panel::-webkit-scrollbar { width: 6px; }
+  .menu-panel::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
+
+  /* CATEGORY TABS */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    background: var(--cream);
+    padding: 10px 0;
+    z-index: 10;
+    border-bottom: 3px solid var(--black);
+  }
+
+  .tab-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 1.5px;
+    padding: 8px 16px;
+    border: 3px solid var(--black);
+    background: var(--white);
+    cursor: pointer;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.12s;
+    color: var(--black);
+  }
+
+  .tab-btn:hover {
+    background: var(--yellow);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--black);
+  }
+
+  .tab-btn.active {
+    background: var(--red);
+    color: var(--white);
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow);
+  }
+
+  /* CATEGORY SECTION */
+  .category-section { display: none; }
+  .category-section.active { display: block; }
+
+  .category-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-shadow: 2px 2px 0 var(--black);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 3px dashed var(--red);
+  }
+
+  /* PRODUCT GRID */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .product-card {
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: var(--yellow);
+  }
+
+  .product-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--shadow-lg);
+    background: var(--yellow-light);
+  }
+
+  .product-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--black);
+  }
+
+  .product-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 1.5px;
+    color: var(--red);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+
+  .product-ingredients {
+    font-size: 0.72rem;
+    color: #666;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .product-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: var(--black);
+    background: var(--yellow);
+    display: inline-block;
+    padding: 3px 10px;
+    border: 2px solid var(--black);
+    border-radius: 4px;
+  }
+
+  .add-icon {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 28px; height: 28px;
+    background: var(--red);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 900;
+    border: 2px solid var(--black);
+    line-height: 1;
+  }
+
+  /* RIGHT - ORDER PANEL */
+  .order-panel {
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .order-header {
+    background: var(--red);
+    padding: 14px 18px;
+    border-bottom: 3px solid var(--yellow);
+  }
+
+  .order-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+    color: var(--yellow);
+    text-shadow: 2px 2px 0 var(--black);
+  }
+
+  /* ORDER META */
+  .order-meta {
+    background: #222;
+    padding: 12px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    border-bottom: 2px solid #333;
+  }
+
+  .meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .meta-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--yellow);
+    text-transform: uppercase;
+  }
+
+  .meta-input {
+    background: #333;
+    border: 2px solid #555;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 8px;
+    border-radius: 4px;
+    outline: none;
+    width: 100%;
+  }
+
+  .meta-input:focus { border-color: var(--yellow); }
+
+  .meta-toggle {
+    display: flex;
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 5px 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border: 2px solid #555;
+    background: #333;
+    color: #aaa;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.1s;
+  }
+
+  .toggle-btn.active {
+    background: var(--yellow);
+    color: var(--black);
+    border-color: var(--yellow);
+  }
+
+  /* ORDER ITEMS LIST */
+  .order-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .order-items::-webkit-scrollbar { width: 4px; }
+  .order-items::-webkit-scrollbar-thumb { background: var(--red); }
+
+  .empty-order {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #444;
+    gap: 10px;
+  }
+
+  .empty-order .emoji { font-size: 3rem; }
+  .empty-order p {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: #555;
+  }
+
+  .order-item {
+    background: #1e1e1e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .item-info { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    color: var(--yellow);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-unit-price {
+    font-size: 0.7rem;
+    color: #666;
+    font-weight: 700;
+  }
+
+  .item-note {
+    font-size: 0.68rem;
+    color: #888;
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  .qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .qty-btn {
+    width: 24px; height: 24px;
+    background: #333;
+    border: 2px solid #555;
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+
+  .qty-btn:hover { background: var(--red); border-color: var(--red); }
+
+  .qty-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--white);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .item-total {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--green);
+    min-width: 70px;
+    text-align: right;
+  }
+
+  .item-delete {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px;
+    transition: color 0.1s;
+    line-height: 1;
+  }
+  .item-delete:hover { color: var(--red); }
+
+  /* NOTES */
+  .order-notes-section {
+    padding: 10px 12px;
+    border-top: 2px solid #333;
+  }
+
+  .notes-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--yellow);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  .notes-input {
+    width: 100%;
+    background: #1e1e1e;
+    border: 2px solid #333;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    outline: none;
+    resize: none;
+    height: 52px;
+  }
+  .notes-input:focus { border-color: var(--yellow); }
+
+  /* TOTALS */
+  .order-totals {
+    background: #111;
+    padding: 12px 18px;
+    border-top: 3px solid #333;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .total-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .total-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--white);
+    letter-spacing: 1px;
+  }
+
+  .grand-total-row {
+    border-top: 2px solid #333;
+    padding-top: 10px;
+    margin-top: 6px;
+  }
+
+  .grand-total-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--yellow);
+  }
+
+  .grand-total-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+
+  /* PAYMENT */
+  .payment-section {
+    padding: 12px 18px;
+    background: #111;
+    border-top: 2px solid #222;
+  }
+
+  .payment-methods {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .pay-btn {
+    flex: 1;
+    padding: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    border: 2px solid #444;
+    background: #222;
+    color: #777;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.1s;
+  }
+
+  .pay-btn.active {
+    background: var(--green-dark);
+    border-color: var(--green);
+    color: var(--white);
+  }
+
+  .cash-calc {
+    display: none;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .cash-calc.visible { display: flex; }
+
+  .cash-input {
+    flex: 1;
+    background: #222;
+    border: 2px solid #444;
+    color: var(--white);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    outline: none;
+  }
+  .cash-input:focus { border-color: var(--yellow); }
+
+  .change-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    color: var(--yellow);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-clear {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    background: #222;
+    border: 2px solid #444;
+    color: #777;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.1s;
+  }
+  .btn-clear:hover { background: var(--red); border-color: var(--red); color: white; }
+
+  .btn-invoice {
+    flex: 1;
+    padding: 12px;
+    background: var(--red);
+    border: 3px solid var(--yellow);
+    color: var(--yellow);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--yellow);
+    transition: all 0.12s;
+  }
+  .btn-invoice:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--yellow); }
+  .btn-invoice:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--yellow); }
+
+  /* ============ INVOICE MODAL ============ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .invoice-container {
+    background: var(--white);
+    border: 4px solid var(--black);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 8px 8px 0 var(--black);
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .invoice-header {
+    background: var(--black);
+    padding: 18px 22px;
+    text-align: center;
+    border-bottom: 4px solid var(--yellow);
+  }
+
+  .invoice-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    color: var(--yellow);
+    letter-spacing: 4px;
+    text-shadow: 3px 3px 0 var(--red);
+    display: block;
+    line-height: 1;
+  }
+
+  .invoice-tagline {
+    color: #aaa;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  .invoice-body { padding: 20px 22px; }
+
+  .invoice-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed #ddd;
+  }
+
+  .inv-meta-item { }
+  .inv-meta-key {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #999;
+    text-transform: uppercase;
+  }
+  .inv-meta-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--black);
+  }
+
+  .inv-badge {
+    display: inline-block;
+    background: var(--yellow);
+    border: 2px solid var(--black);
+    border-radius: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    color: var(--black);
+  }
+
+  .inv-badge.llevar { background: var(--red); color: white; border-color: var(--black); }
+  .inv-badge.local { background: var(--green); color: white; border-color: var(--black); }
+
+  /* INVOICE ITEMS */
+  .inv-items-header {
+    display: grid;
+    grid-template-columns: 1fr 50px 40px 80px;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #999;
+    text-transform: uppercase;
+    padding: 6px 0;
+    border-bottom: 2px solid var(--black);
+    margin-bottom: 8px;
+  }
+
+  .inv-item-row {
+    display: grid;
+    grid-template-columns: 1fr 50px 40px 80px;
+    gap: 4px;
+    padding: 7px 0;
+    border-bottom: 1px dashed #e0e0e0;
+    align-items: start;
+  }
+
+  .inv-item-name {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: var(--black);
+    line-height: 1.3;
+  }
+  .inv-item-note {
+    font-size: 0.67rem;
+    color: #888;
+    font-style: italic;
+  }
+  .inv-item-price, .inv-item-qty, .inv-item-subtotal {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-align: right;
+    color: var(--black);
+  }
+  .inv-item-subtotal { color: var(--red); }
+
+  /* INVOICE TOTALS */
+  .inv-totals {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 3px solid var(--black);
+  }
+
+  .inv-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .inv-grand-row {
+    background: var(--black);
+    color: var(--yellow);
+    padding: 10px 12px;
+    margin: 10px -22px -20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .inv-grand-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+  }
+
+  .inv-grand-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+    color: var(--green);
+  }
+
+  /* INV PAYMENT INFO */
+  .inv-payment {
+    background: var(--cream);
+    border: 2px solid var(--black);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .inv-pay-method {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--black);
+  }
+
+  .inv-change {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--green-dark);
+  }
+
+  .inv-notes-box {
+    background: var(--yellow-light);
+    border: 2px dashed var(--yellow);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 12px;
+  }
+
+  .inv-notes-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--black);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .inv-notes-text {
+    font-size: 0.78rem;
+    color: #555;
+    font-style: italic;
+  }
+
+  .inv-footer {
+    text-align: center;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 2px dashed #ccc;
+    font-size: 0.72rem;
+    color: #aaa;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .inv-contact {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--red);
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* INVOICE ACTIONS */
+  .invoice-actions {
+    padding: 16px 22px;
+    display: flex;
+    gap: 10px;
+    border-top: 3px solid var(--black);
+    background: var(--gray);
+  }
+
+  .inv-btn {
+    flex: 1;
+    padding: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 2px solid var(--black);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.12s;
+  }
+
+  .inv-btn-close {
+    background: var(--white);
+    color: var(--black);
+  }
+
+  .inv-btn-new {
+    background: var(--red);
+    color: var(--yellow);
+    border-color: var(--black);
+  }
+
+  .inv-btn:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow); }
+
+  /* ITEM COUNT BADGE */
+  .cart-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--yellow);
+    color: var(--black);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.8rem;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--black);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 900px) {
+    .pos-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    .order-panel { max-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">MANDIPALMAS</div>
+  <div class="header-info">
+    <span class="order-badge" id="orderBadgeHeader">PEDIDO #001</span>
+    <span class="clock" id="clockDisplay">—</span>
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div class="pos-layout">
+
+  <!-- LEFT: MENU -->
+  <div class="menu-panel">
+    <div class="category-tabs">
+      <button class="tab-btn active" onclick="showCategory('papas')">🍟 Papas</button>
+      <button class="tab-btn" onclick="showCategory('perros')">🌭 Perros</button>
+      <button class="tab-btn" onclick="showCategory('alitas')">🍗 Alitas</button>
+      <button class="tab-btn" onclick="showCategory('combos')">📦 Combos</button>
+    </div>
+
+    <!-- PAPAS -->
+    <div class="category-section active" id="cat-papas">
+      <div class="category-title">🍟 PAPAS MANDIPALMAS</div>
+      <div class="products-grid" id="grid-papas"></div>
+    </div>
+
+    <!-- PERROS -->
+    <div class="category-section" id="cat-perros">
+      <div class="category-title">🌭 PERROS Y CHORIZOS</div>
+      <div class="products-grid" id="grid-perros"></div>
+    </div>
+
+    <!-- ALITAS -->
+    <div class="category-section" id="cat-alitas">
+      <div class="category-title">🍗 ALITAS MANDIALITAS</div>
+      <div class="products-grid" id="grid-alitas"></div>
+    </div>
+
+    <!-- COMBOS ALITAS -->
+    <div class="category-section" id="cat-combos">
+      <div class="category-title">📦 COMBOS ALITAS</div>
+      <div class="products-grid" id="grid-combos"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ORDER PANEL -->
+  <div class="order-panel">
+    <div class="order-header">
+      <div class="order-title">🧾 PEDIDO ACTUAL <span class="cart-count" id="cartCount">0</span></div>
+    </div>
+
+    <!-- META -->
+    <div class="order-meta">
+      <div class="meta-field">
+        <span class="meta-label">N° Pedido</span>
+        <input class="meta-input" id="orderNum" value="001" readonly>
+      </div>
+      <div class="meta-field">
+        <span class="meta-label">Modalidad</span>
+        <div class="meta-toggle">
+          <button class="toggle-btn active" id="btnLlevar" onclick="setModalidad('llevar')">LLEVAR</button>
+          <button class="toggle-btn" id="btnLocal" onclick="setModalidad('local')">LOCAL</button>
+        </div>
+      </div>
+      <div class="meta-field" style="grid-column: 1/-1;">
+        <span class="meta-label">Adiciones / Especificaciones</span>
+        <input class="meta-input" id="adicionesInput" placeholder="Ej: sin cebolla, extra salsa rosada...">
+      </div>
+    </div>
+
+    <!-- ITEMS -->
+    <div class="order-items" id="orderItems">
+      <div class="empty-order" id="emptyState">
+        <div class="emoji">🍟</div>
+        <p>SELECCIONA PRODUCTOS</p>
+        <p style="font-size:0.75rem; color:#444;">DEL MENÚ DE LA IZQUIERDA</p>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="order-notes-section">
+      <span class="notes-label">📝 NOTAS DEL PEDIDO</span>
+      <textarea class="notes-input" id="orderNotes" placeholder="Observaciones generales del pedido..."></textarea>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="order-totals">
+      <div class="total-row">
+        <span class="total-label">Subtotal</span>
+        <span class="total-value" id="subtotalDisplay">$0</span>
+      </div>
+      <div class="total-row grand-total-row">
+        <span class="grand-total-label">TOTAL</span>
+        <span class="grand-total-value" id="totalDisplay">$0</span>
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="payment-section">
+      <div class="payment-methods">
+        <button class="pay-btn" id="payEfectivo" onclick="setPayment('efectivo')">💵 EFECTIVO</button>
+        <button class="pay-btn" id="payTransfer" onclick="setPayment('transferencia')">📲 TRANSFERENCIA</button>
+      </div>
+      <div class="cash-calc" id="cashCalc">
+        <input class="cash-input" id="cashReceived" type="number" placeholder="Recibido $" oninput="calcChange()">
+        <span class="change-display" id="changeDisplay">CAMBIO: —</span>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-clear" onclick="clearOrder()">🗑 LIMPIAR</button>
+        <button class="btn-invoice" onclick="generateInvoice()">GENERAR FACTURA ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-overlay" id="invoiceModal">
+  <div class="invoice-container">
+    <div class="invoice-header">
+      <span class="invoice-logo">MANDIPALMAS</span>
+      <div class="invoice-tagline">CON QUE VAS A CALMAR EL ANTOJO?</div>
+    </div>
+    <div class="invoice-body" id="invoiceBody">
+      <!-- Generated dynamically -->
+    </div>
+    <div class="invoice-actions">
+      <button class="inv-btn inv-btn-close" onclick="closeInvoice()">✕ CERRAR</button>
+      <button class="inv-btn inv-btn-new" onclick="newOrder()">+ NUEVO PEDIDO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ MENU DATA ============
+const menuData = {
+  papas: [
+    { id: 'salchi', name: 'SALCHIPAPAS', price: 8000, ingredients: 'Papas + 6 salchichas + 1 huevo de codorniz' },
+    { id: 'superm', name: 'SUPERMANDINGAS', price: 12000, ingredients: 'Papas + 8 salchichas + 2 chorizitos + 1 huevo de codorniz + 1 arepa frita' },
+    { id: 'mandip', name: 'MANDIDESMECHADA PEQUEÑA', price: 12000, ingredients: 'Papas + pollo desmechado + 4 salchichas + 1 chorizito + 1 huevo de codorniz' },
+    { id: 'mandig', name: 'MANDIDESMECHADA GRANDE', price: 15000, ingredients: 'Papas + pollo desmechado + 6 salchichas + 2 chorizitos + 2 huevos de codorniz' },
+    { id: 'mandim', name: 'MANDIMIXTA', price: 23000, ingredients: 'Papas + carne desmechada + pollo desmechado + guacamole + pico de gallo' },
+    { id: 'mandil', name: 'MANDILONGUI', price: 12000, ingredients: 'Papas + 1 longuiza + 2 chorizitos + 1 huevo de codorniz' },
+    { id: 'lonqui', name: 'LONGUICHORIZO', price: 12000, ingredients: 'Papas + 1 longuiza + 1 chorizito + 1 arepa frita' },
+    { id: 'chorip', name: 'CHORIPAPAS', price: 15000, ingredients: 'Papas + 1 chorizo + 2 huevos de codorniz + 1 arepa frita' },
+    { id: 'mandcarnep', name: 'MANDIDESMECHADA DE CARNE PEQUEÑA', price: 17000, ingredients: 'Papas + carne desmechada + 4 salchichas + 1 chorizito + 1 huevo de codorniz + guacamole + pico de gallo' },
+    { id: 'mandcarneg', name: 'MANDIDESMECHADA DE CARNE GRANDE', price: 23000, ingredients: 'Papas + carne desmechada + 6 salchichas + 2 chorizitos + 2 huevos de codorniz + guacamole + pico de gallo' },
+  ],
+  perros: [
+    { id: 'perrito', name: 'PERRITO', price: 5000, ingredients: 'Perro clásico' },
+    { id: 'choriperro', name: 'CHORIPERRO', price: 8000, ingredients: 'Perrito especial con chorizo' },
+    { id: 'comboperro', name: 'COMBO PERRO', price: 10000, ingredients: 'Perrito + porción de papas' },
+    { id: 'combochori', name: 'COMBO CHORIPERRO', price: 13000, ingredients: 'Choriperro + porción de papas' },
+  ],
+  alitas: [
+    { id: 'alitasp', name: 'MANDIALITAS PEQUEÑAS', price: 14000, ingredients: 'Papas + 3 alas + arepa frita' },
+    { id: 'alitasg', name: 'MANDIALITAS GRANDES', price: 18000, ingredients: 'Papas + 5 alas + arepa frita' },
+  ],
+  combos: [
+    { id: 'combo8', name: 'X8 Y 2 AREPAS', price: 23000, ingredients: '8 alitas + 2 arepas fritas. Incluye papas y arepa frita.' },
+    { id: 'combo12', name: 'X12 Y 3 AREPAS', price: 28000, ingredients: '12 alitas + 3 arepas fritas. Incluye papas y arepa frita.' },
+    { id: 'combo16', name: 'X16 Y 4 AREPAS', price: 34000, ingredients: '16 alitas + 4 arepas fritas. Incluye papas y arepa frita.' },
+  ]
+};
+
+// ============ STATE ============
+let cart = [];
+let orderCounter = 1;
+let currentPayment = null;
+let currentModalidad = 'llevar';
+
+// ============ RENDER MENU ============
+function renderMenus() {
+  Object.entries(menuData).forEach(([cat, items]) => {
+    const grid = document.getElementById(`grid-${cat}`);
+    grid.innerHTML = items.map(item => `
+      <div class="product-card" onclick="addToCart('${item.id}', '${item.name.replace(/'/g,"\\'")}', ${item.price})">
+        <div class="product-name">${item.name}</div>
+        <div class="product-ingredients">${item.ingredients}</div>
+        <div class="product-price">${formatCurrency(item.price)}</div>
+        <div class="add-icon">+</div>
+      </div>
+    `).join('');
+  });
+}
+
+// ============ CATEGORY TABS ============
+function showCategory(cat) {
+  document.querySelectorAll('.category-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`cat-${cat}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ============ CART FUNCTIONS ============
+function addToCart(id, name, price) {
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id, name, price, qty: 1 });
+  }
+  renderCart();
+  // Flash animation on add
+  const card = event.currentTarget;
+  card.style.background = '#d4ffd4';
+  setTimeout(() => card.style.background = '', 300);
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  renderCart();
+}
+
+function removeItem(id) {
+  cart = cart.filter(i => i.id !== id);
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('orderItems');
+  const empty = document.getElementById('emptyState');
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+
+  if (cart.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(createEmptyState());
+    updateTotals();
+    return;
+  }
+
+  container.innerHTML = cart.map(item => `
+    <div class="order-item">
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-unit-price">${formatCurrency(item.price)} c/u</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+        <span class="qty-value">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+      </div>
+      <div class="item-total">${formatCurrency(item.price * item.qty)}</div>
+      <button class="item-delete" onclick="removeItem('${item.id}')">✕</button>
+    </div>
+  `).join('');
+
+  updateTotals();
+}
+
+function createEmptyState() {
+  const div = document.createElement('div');
+  div.className = 'empty-order';
+  div.id = 'emptyState';
+  div.innerHTML = '<div class="emoji">🍟</div><p>SELECCIONA PRODUCTOS</p><p style="font-size:0.75rem;color:#444;">DEL MENÚ DE LA IZQUIERDA</p>';
+  return div;
+}
+
+function updateTotals() {
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  document.getElementById('subtotalDisplay').textContent = formatCurrency(total);
+  document.getElementById('totalDisplay').textContent = formatCurrency(total);
+  calcChange();
+}
+
+// ============ MODALIDAD ============
+function setModalidad(mode) {
+  currentModalidad = mode;
+  document.getElementById('btnLlevar').classList.toggle('active', mode === 'llevar');
+  document.getElementById('btnLocal').classList.toggle('active', mode === 'local');
+}
+
+// ============ PAYMENT ============
+function setPayment(method) {
+  currentPayment = method;
+  document.getElementById('payEfectivo').classList.toggle('active', method === 'efectivo');
+  document.getElementById('payTransfer').classList.toggle('active', method === 'transferencia');
+  document.getElementById('cashCalc').classList.toggle('visible', method === 'efectivo');
+}
+
+function calcChange() {
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+  const change = received - total;
+  document.getElementById('changeDisplay').textContent = received > 0
+    ? `CAMBIO: ${formatCurrency(Math.max(0, change))}`
+    : 'CAMBIO: —';
+}
+
+// ============ CLEAR ============
+function clearOrder() {
+  if (cart.length === 0) return;
+  if (!confirm('¿Limpiar el pedido actual?')) return;
+  cart = [];
+  document.getElementById('orderNotes').value = '';
+  document.getElementById('adicionesInput').value = '';
+  document.getElementById('cashReceived').value = '';
+  renderCart();
+}
+
+// ============ INVOICE ============
+function generateInvoice() {
+  if (cart.length === 0) { alert('¡Agrega productos al pedido primero!'); return; }
+  if (!currentPayment) { alert('Selecciona un método de pago.'); return; }
+
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const hora = now.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+  const change = received - total;
+  const notes = document.getElementById('orderNotes').value.trim();
+  const adiciones = document.getElementById('adicionesInput').value.trim();
+  const numPedido = String(orderCounter).padStart(3, '0');
+
+  const body = document.getElementById('invoiceBody');
+
+  body.innerHTML = `
+    <div class="invoice-meta-row">
+      <div class="inv-meta-item">
+        <div class="inv-meta-key">N° PEDIDO</div>
+        <div class="inv-meta-val">#${numPedido}</div>
+      </div>
+      <div class="inv-meta-item" style="text-align:center">
+        <div class="inv-meta-key">FECHA</div>
+        <div class="inv-meta-val" style="font-size:0.9rem">${fecha}</div>
+      </div>
+      <div class="inv-meta-item" style="text-align:right">
+        <div class="inv-meta-key">HORA</div>
+        <div class="inv-meta-val">${hora}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px; display:flex; gap:8px; align-items:center;">
+      <span class="inv-meta-key">MODALIDAD:</span>
+      <span class="inv-badge ${currentModalidad === 'llevar' ? 'llevar' : 'local'}">
+        ${currentModalidad === 'llevar' ? '🛍 PARA LLEVAR' : '🪑 COMER EN LOCAL'}
+      </span>
+    </div>
+
+    ${adiciones ? `
+    <div class="inv-notes-box" style="margin-bottom:12px; background:#fff3cd; border-color:#ffc107;">
+      <div class="inv-notes-label">⚡ ADICIONES / ESPECIFICACIONES</div>
+      <div class="inv-notes-text">${adiciones}</div>
+    </div>` : ''}
+
+    <div class="inv-items-header">
+      <span>PRODUCTO</span>
+      <span style="text-align:right">PRECIO</span>
+      <span style="text-align:right">CANT.</span>
+      <span style="text-align:right">SUBTOTAL</span>
+    </div>
+
+    ${cart.map(item => `
+      <div class="inv-item-row">
+        <div>
+          <div class="inv-item-name">${item.name}</div>
+        </div>
+        <div class="inv-item-price">${formatCurrency(item.price)}</div>
+        <div class="inv-item-qty">x${item.qty}</div>
+        <div class="inv-item-subtotal">${formatCurrency(item.price * item.qty)}</div>
+      </div>
+    `).join('')}
+
+    <div class="inv-totals">
+      <div class="inv-total-row">
+        <span>Subtotal</span>
+        <span>${formatCurrency(total)}</span>
+      </div>
+      <div class="inv-grand-row">
+        <span class="inv-grand-label">TOTAL A PAGAR</span>
+        <span class="inv-grand-value">${formatCurrency(total)}</span>
+      </div>
+    </div>
+
+    <div class="inv-payment" style="margin-top: 40px;">
+      <div>
+        <div class="inv-meta-key">MÉTODO DE PAGO</div>
+        <div class="inv-pay-method">${currentPayment === 'efectivo' ? '💵 EFECTIVO' : '📲 TRANSFERENCIA'}</div>
+      </div>
+      ${currentPayment === 'efectivo' && received > 0 ? `
+        <div style="text-align:right">
+          <div class="inv-meta-key">RECIBIDO</div>
+          <div class="inv-pay-method">${formatCurrency(received)}</div>
+          <div class="inv-change">CAMBIO: ${formatCurrency(Math.max(0, change))}</div>
+        </div>
+      ` : ''}
+    </div>
+
+    ${notes ? `
+    <div class="inv-notes-box">
+      <div class="inv-notes-label">📝 NOTAS DEL PEDIDO</div>
+      <div class="inv-notes-text">${notes}</div>
+    </div>` : ''}
+
+    <div class="inv-footer">
+      ¡GRACIAS POR TU COMPRA!
+      <span class="inv-contact">📞 300 5863581 · @MANDIPALMAS_</span>
+      <span style="display:block; margin-top:4px; font-size:0.65rem;">SALSAS: PIÑA · ROSADA · BBQ · TOMATE · MAÍZ DULCE</span>
+    </div>
+  `;
+
+  document.getElementById('invoiceModal').classList.add('open');
+}
+
+function closeInvoice() {
+  document.getElementById('invoiceModal').classList.remove('open');
+}
+
+function newOrder() {
+  orderCounter++;
+  const numPedido = String(orderCounter).padStart(3, '0');
+  document.getElementById('orderNum').value = numPedido;
+  document.getElementById('orderBadgeHeader').textContent = `PEDIDO #${numPedido}`;
+  cart = [];
+  currentPayment = null;
+  document.getElementById('orderNotes').value = '';
+  document.getElementById('adicionesInput').value = '';
+  document.getElementById('cashReceived').value = '';
+  document.getElementById('cashCalc').classList.remove('visible');
+  document.getElementById('payEfectivo').classList.remove('active');
+  document.getElementById('payTransfer').classList.remove('active');
+  renderCart();
+  closeInvoice();
+}
+
+// ============ UTILS ============
+function formatCurrency(n) {
+  return '$ ' + n.toLocaleString('es-CO');
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ============ INIT ============
+renderMenus();
+updateClock();
+setInterval(updateClock, 1000);
+
+// Close modal clicking outside
+document.getElementById('invoiceModal').addEventListener('click', function(e) {
+  if (e.target === this) closeInvoice();
+});
+</script>
+</body>
+</html>
