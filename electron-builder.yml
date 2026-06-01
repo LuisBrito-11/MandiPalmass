@@ -1,0 +1,14 @@
+appId: com.mandipalmas.pos
+productName: MandipalmasPOS
+directories:
+  output: dist
+files:
+  - out/**/*
+  - package.json
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  runAfterFinish: true

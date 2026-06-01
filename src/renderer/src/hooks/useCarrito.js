@@ -1,17 +1,8 @@
 import { useState, useEffect } from 'react';
 
-export const useCarrito = () => {
-  // Cargar historial de localStorage al iniciar
-  const [historialPedidos, setHistorialPedidos] = useState(() => {
-    const saved = localStorage.getItem('mandipalmas_historial');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+export const useCarrito = (mesaActiva = null) => {
   const [carrito, setCarrito] = useState([]);
-
-  // El contador de pedidos se basa en el total de pedidos del día + 1
-  const [contadorPedido, setContadorPedido] = useState(historialPedidos.length + 1);
-
+  const [contadorPedido, setContadorPedido] = useState(1);
   const [modalidad, setModalidad] = useState('local');
   const [metodoPago, setMetodoPago] = useState(null);
   const [recibido, setRecibido] = useState('');
@@ -19,18 +10,27 @@ export const useCarrito = () => {
   const [adicionesGlobales, setAdicionesGlobales] = useState('');
   const [mostrarFactura, setMostrarFactura] = useState(false);
 
-  // Sincronizar historial con localStorage cuando cambie
+  // Fetch today's order count to determine next order number
   useEffect(() => {
-    localStorage.setItem('mandipalmas_historial', JSON.stringify(historialPedidos));
-    setContadorPedido(historialPedidos.length + 1);
-  }, [historialPedidos]);
+    const fetchContador = async () => {
+      try {
+        const peds = await window.api.db.getPedidosHoy();
+        if (peds) {
+          setContadorPedido(peds.length + 1);
+        }
+      } catch (err) {
+        console.error('Failed to fetch orders count:', err);
+      }
+    };
+    fetchContador();
+  }, [mostrarFactura]);
 
   const sonIguales = (p1, p2) => {
     if (!p1 || !p2) return p1 === p2;
     const salsasIguales = JSON.stringify([...p1.salsas].sort()) === JSON.stringify([...p2.salsas].sort());
     const toppingsIguales = JSON.stringify([...p1.toppings].sort()) === JSON.stringify([...p2.toppings].sort());
-    const ads1 = p1.adiciones.map(a => `${a.id}-${a.cantidad}`).sort();
-    const ads2 = p2.adiciones.map(a => `${a.id}-${a.cantidad}`).sort();
+    const ads1 = p1.adiciones?.map(a => `${a.id}-${a.cantidad}`).sort() || [];
+    const ads2 = p2.adiciones?.map(a => `${a.id}-${a.cantidad}`).sort() || [];
     const adicionesIguales = JSON.stringify(ads1) === JSON.stringify(ads2);
     return salsasIguales && toppingsIguales && adicionesIguales;
   };
@@ -39,7 +39,7 @@ export const useCarrito = () => {
     const pers = personalizacion || { toppings: [], salsas: [], adiciones: [] };
     setCarrito(actual => {
       const existeIndex = actual.findIndex(item =>
-        item.id === producto.id && sonIguales(item.personalizacion, pers)
+        (item.codigo === producto.codigo || item.id === producto.id) && sonIguales(item.personalizacion, pers)
       );
       if (existeIndex !== -1) {
         const nuevoCarrito = [...actual];
@@ -51,12 +51,14 @@ export const useCarrito = () => {
       }
       const cartId = crypto.randomUUID();
       const precioAdiciones = pers.adiciones?.reduce((sum, a) => sum + (a.price * a.cantidad), 0) || 0;
+      const precioBase = producto.precio || producto.price || 0;
+      
       const nuevoItem = {
         cartId,
         ...producto,
         cantidad: 1,
         personalizacion: pers,
-        precioTotalItem: producto.price + precioAdiciones
+        precioTotalItem: precioBase + precioAdiciones
       };
       return [...actual, nuevoItem];
     });
@@ -78,22 +80,34 @@ export const useCarrito = () => {
 
   const total = carrito.reduce((sum, i) => sum + (i.precioTotalItem * i.cantidad), 0);
 
-  const finalizarPedido = () => {
-    if (carrito.length === 0) return;
+  const finalizarPedido = async (direccion = '') => {
+    if (carrito.length === 0) return null;
 
     const nuevoPedidoObj = {
-      nPedido: contadorPedido,
+      numero: contadorPedido,
       fecha: new Date().toISOString(),
       items: [...carrito],
       total,
-      metodoPago,
-      modalidad,
-      recibido,
-      cambio: parseFloat(recibido) - total,
-      adicionesGlobales
+      metodo_pago: metodoPago || 'efectivo',
+      tipo: mesaActiva ? 'mesa' : modalidad,
+      mesa_id: mesaActiva ? mesaActiva.id : null,
+      recibido: recibido ? parseFloat(recibido) : 0,
+      cambio: recibido ? parseFloat(recibido) - total : 0,
+      direccion: direccion || '',
+      notas: notas || adicionesGlobales || '',
+      estado: 'completado'
     };
 
-    setHistorialPedidos(prev => [...prev, nuevoPedidoObj]);
+    try {
+      const res = await window.api.db.createPedido(nuevoPedidoObj);
+      if (res) {
+        setContadorPedido(prev => prev + 1);
+        return { ...nuevoPedidoObj, id: res.id };
+      }
+    } catch (err) {
+      console.error('Failed to create order in hybrid DB:', err);
+    }
+    return null;
   };
 
   const limpiarPedido = () => {
@@ -108,7 +122,6 @@ export const useCarrito = () => {
   };
 
   const nuevoPedido = () => {
-    finalizarPedido(); // Guardar en historial antes de limpiar
     setCarrito([]);
     setMetodoPago(null);
     setRecibido('');
@@ -121,10 +134,11 @@ export const useCarrito = () => {
     setCarrito(actual => actual.map(item => {
       if (item.cartId === cartId) {
         const precioAdiciones = nuevaPersonalizacion.adiciones?.reduce((sum, a) => sum + (a.price * a.cantidad), 0) || 0;
+        const precioBase = item.precio || item.price || 0;
         return {
           ...item,
           personalizacion: nuevaPersonalizacion,
-          precioTotalItem: item.price + precioAdiciones
+          precioTotalItem: precioBase + precioAdiciones
         };
       }
       return item;
@@ -136,8 +150,9 @@ export const useCarrito = () => {
 
   return {
     carrito,
-    historialPedidos,
+    setCarrito,
     contadorPedido,
+    setContadorPedido,
     modalidad,
     metodoPago,
     recibido,
@@ -158,6 +173,7 @@ export const useCarrito = () => {
     eliminarItem,
     editarItem,
     limpiarPedido,
-    nuevoPedido
+    nuevoPedido,
+    finalizarPedido
   };
 };
