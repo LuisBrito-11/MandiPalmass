@@ -26,4 +26,11 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Proceso principal, preload, pruebas y archivos de configuración corren en Node, no en el navegador.
+    files: ['src/main/**/*.js', 'src/preload/**/*.js', 'tests/**/*.js', '*.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])
