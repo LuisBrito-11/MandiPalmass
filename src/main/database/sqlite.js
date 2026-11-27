@@ -206,8 +206,8 @@ export const sqliteOperations = {
   },
 
   getPedidosHoy: () => {
-    const today = new Date().toISOString().split('T')[0]
-    const list = db.prepare("SELECT * FROM pedidos WHERE date(fecha) = date('now') ORDER BY id DESC").all()
+    // Día local: las fechas se guardan en UTC y pasadas las 7 p. m. (Colombia) el día UTC ya es el siguiente.
+    const list = db.prepare("SELECT * FROM pedidos WHERE date(fecha, 'localtime') = date('now', 'localtime') ORDER BY id DESC").all()
     return list.map(ped => {
       const items = db.prepare('SELECT * FROM pedido_items WHERE pedido_id = ?').all(ped.id)
       return {
@@ -221,7 +221,7 @@ export const sqliteOperations = {
   },
 
   getPedidosPorRango: (desde, hasta) => {
-    const list = db.prepare("SELECT * FROM pedidos WHERE date(fecha) >= date(?) AND date(fecha) <= date(?) ORDER BY id DESC").all(desde, hasta)
+    const list = db.prepare("SELECT * FROM pedidos WHERE date(fecha, 'localtime') >= date(?) AND date(fecha, 'localtime') <= date(?) ORDER BY id DESC").all(desde, hasta)
     return list.map(ped => {
       const items = db.prepare('SELECT * FROM pedido_items WHERE pedido_id = ?').all(ped.id)
       return {
