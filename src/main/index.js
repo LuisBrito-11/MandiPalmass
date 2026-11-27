@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { dbManager } from './database/dbManager.js'
-import { printReceipt, testPrinter, loadPrinterConfig, savePrinterConfig } from './printer.js'
+import { registerPrinting } from './printing/index.js'
 import { registerStatusListener, getOnlineStatus } from './database/sync.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -47,7 +47,7 @@ const gotTheLock = app.requestSingleInstanceLock(additionalData)
 if (!gotTheLock) {
   app.quit()
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+  app.on('second-instance', () => {
     const mainWindow = BrowserWindow.getAllWindows()[0]
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore()
@@ -100,21 +100,7 @@ if (!gotTheLock) {
     })
 
     // Printer IPC Handlers
-    ipcMain.handle('printer:print', async (event, ticketData) => {
-      return await printReceipt(ticketData)
-    })
-
-    ipcMain.handle('printer:testPrint', async () => {
-      return await testPrinter()
-    })
-
-    ipcMain.handle('printer:getConfig', async () => {
-      return loadPrinterConfig()
-    })
-
-    ipcMain.handle('printer:saveConfig', async (event, config) => {
-      return savePrinterConfig(config)
-    })
+    registerPrinting(ipcMain, app.getPath('userData'))
 
     // Network IPC Handlers
     ipcMain.handle('network:getPendingSync', async () => {

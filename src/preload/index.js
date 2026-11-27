@@ -18,7 +18,10 @@ contextBridge.exposeInMainWorld('api', {
     print: (ticketData) => ipcRenderer.invoke('printer:print', ticketData),
     testPrint: () => ipcRenderer.invoke('printer:testPrint'),
     getConfig: () => ipcRenderer.invoke('printer:getConfig'),
-    saveConfig: (config) => ipcRenderer.invoke('printer:saveConfig', config)
+    saveConfig: (config) => ipcRenderer.invoke('printer:saveConfig', config),
+    listDevices: () => ipcRenderer.invoke('printer:listDevices'),
+    getBusiness: () => ipcRenderer.invoke('printer:getBusiness'),
+    saveBusiness: (business) => ipcRenderer.invoke('printer:saveBusiness', business)
   },
   network: {
     isOnline: () => navigator.onLine,
