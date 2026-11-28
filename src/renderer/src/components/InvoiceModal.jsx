@@ -8,6 +8,7 @@ const InvoiceModal = ({
   carrito,
   total,
   nPedido,
+  fecha,
   modalidad,
   metodoPago,
   recibido,
@@ -15,12 +16,14 @@ const InvoiceModal = ({
   adicionesGlobales,
   mesaId = null
 }) => {
-  if (!abierto) return null;
-
   const [printStatus, setPrintStatus] = useState('idle'); // 'idle', 'printing', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
-  
-  const fechaActual = new Date();
+
+  // Los hooks van antes de cualquier retorno temprano (regla de hooks de React).
+  if (!abierto) return null;
+
+  // Fecha del pedido guardado: no cambia entre renders ni al reimprimir.
+  const fechaActual = new Date(fecha);
 
   const handlePrint = async () => {
     setPrintStatus('printing');

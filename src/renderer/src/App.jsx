@@ -51,6 +51,7 @@ function App() {
   const [productoPersonalizar, setProductoPersonalizar] = useState(null);
   const [itemPersonalizarCartId, setItemPersonalizarCartId] = useState(null);
   const [mostrarModalPersonalizar, setMostrarModalPersonalizar] = useState(false);
+  const [pedidoFacturado, setPedidoFacturado] = useState(null);
 
   // Load menu, tables and historical orders from DB on start
   useEffect(() => {
@@ -202,7 +203,8 @@ function App() {
         }
       }
       
-      // 3. Show printed Modal
+      // 3. Show printed Modal with the number and date that were saved
+      setPedidoFacturado(resPedido);
       setMostrarFactura(true);
       await cargarDatosApp();
     } else {
@@ -307,7 +309,8 @@ function App() {
         onNuevoPedido={handleNuevoPedidoFactura}
         carrito={carrito}
         total={total}
-        nPedido={contadorPedido}
+        nPedido={pedidoFacturado?.numero}
+        fecha={pedidoFacturado?.fecha}
         modalidad={modalidad}
         metodoPago={metodoPago}
         recibido={recibido}

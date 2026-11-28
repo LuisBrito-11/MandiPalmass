@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
-        external: ['electron', 'better-sqlite3', 'node-thermal-printer']
+        external: ['electron', 'better-sqlite3', 'node-thermal-printer', 'serialport']
       }
     }
   },
